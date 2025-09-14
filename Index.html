@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>College Notes Hub</title>
+<style>
+body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; padding:0; background: linear-gradient(135deg,#6a11cb 0%,#2575fc 100%); color:#333; }
+header { background: rgba(0,0,0,0.75); color:#fff; padding:40px 20px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.4); }
+header h1 { font-size:2.8rem; margin:0; }
+header p { font-size:1.2rem; margin-top:10px; opacity:0.9; }
+.hero { text-align:center; padding:50px 20px; color:#fff; }
+.hero h2 { font-size:2rem; margin-bottom:15px; }
+.hero img { max-width:300px; margin-top:20px; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; max-width:1000px; margin:30px auto; padding:0 20px; }
+.card { background:#fff; padding:25px; border-radius:15px; text-align:center; box-shadow:0 6px 15px rgba(0,0,0,0.2); transition:0.3s; cursor:pointer; }
+.card:hover { transform:translateY(-8px); }
+.card img { width:80px; margin-bottom:15px; }
+.card h3 { margin:10px 0; color:#2575fc; }
+section { max-width:1000px; margin:30px auto; background:#fff; padding:25px; border-radius:15px; box-shadow:0 6px 15px rgba(0,0,0,0.2); display:none; }
+h2 { color:#2575fc; border-left:5px solid #6a11cb; padding-left:10px; }
+label { font-weight:bold; display:block; margin:8px 0 5px; }
+input, select, button, textarea { width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
+input:focus, select:focus, textarea:focus { border:1px solid #2575fc; outline:none; box-shadow:0 0 5px #2575fc; }
+button { background: linear-gradient(90deg,#ff6a00,#ee0979); color:white; cursor:pointer; font-weight:bold; border:none; transition:0.3s; }
+button:hover { background: linear-gradient(90deg,#ee0979,#ff6a00); transform:translateY(-2px); }
+ul { list-style:none; padding:0; }
+li { background: linear-gradient(135deg,#fbc2eb 0%,#a6c1ee 100%); margin:10px 0; padding:15px; border-radius:12px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.15); transition:0.2s; }
+li:hover { transform:scale(1.02); }
+a { text-decoration:none; color:#2c3e50; margin-right:10px; }
+.deleteBtn, .previewBtn, .downloadBtn { border:none; padding:8px 14px; cursor:pointer; border-radius:6px; color:white; font-size:0.9rem; margin-left:5px; margin-top:5px; }
+.deleteBtn { background:#e74c3c; }
+.previewBtn { background:#27ae60; }
+.downloadBtn { background:#2980b9; }
+#previewFrame { width:100%; height:500px; border:2px solid #2575fc; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.2); }
+#dropArea { border:2px dashed #2575fc; padding:20px; border-radius:10px; text-align:center; cursor:pointer; margin-bottom:10px; transition:0.3s; }
+#dropArea:hover { background-color:#f0f8ff; }
+#selectedFile { font-weight:bold; color:#2575fc; margin-bottom:15px; }
+.reviewItem { border-bottom:1px solid #ccc; padding:10px 0; }
+@media (max-width:768px) { header h1{font-size:2rem;} .hero h2{font-size:1.5rem;} li{flex-direction:column; align-items:flex-start;} #previewFrame{height:300px;} }
+</style>
+</head>
+<body>
+
+<header>
+<h1>📚 College Notes Hub</h1>
+<p>A smarter way to share and study</p>
+</header>
+
+<div class="hero">
+<h2>Welcome to Your Digital Notes Hub 🎓</h2>
+<p>Upload, preview, and download notes anytime, anywhere.</p>
+<img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Hero Image">
+</div>
+
+<div class="cards">
+<div class="card" onclick="showSection('uploadSection')">
+<img src="https://cdn-icons-png.flaticon.com/512/685/685686.png" alt="Upload Icon">
+<h3>Upload Notes</h3>
+<p>Share your subject notes with classmates</p>
+</div>
+<div class="card" onclick="showSection('notesSection')">
+<img src="https://cdn-icons-png.flaticon.com/512/833/833314.png" alt="Notes Icon">
+<h3>View Notes</h3>
+<p>Search, preview, and download notes</p>
+</div>
+<div class="card" onclick="showSection('aboutSection')">
+<img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" alt="About Icon">
+<h3>About</h3>
+<p>Learn more about this project</p>
+</div>
+<div class="card" onclick="showSection('creditsSection')">
+<img src="https://cdn-icons-png.flaticon.com/512/3135/3135817.png" alt="Credits Icon">
+<h3>Credits</h3>
+<p>Know who developed this website</p>
+</div>
+<div class="card" onclick="showSection('reviewsSection')">
+<img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Reviews Icon">
+<h3>Reviews</h3>
+<p>See and leave feedback</p>
+</div>
+</div>
+
+<section id="uploadSection">
+<h2>📤 Upload Notes</h2>
+<form id="noteForm">
+<label>Department:</label>
+<select id="department" required>
+<option value="">Select Department</option>
+<option value="CSE">CSE</option>
+<option value="ECE">ECE</option>
+<option value="ME">Mechanical</option>
+<option value="CE">Civil</option>
+<option value="AI_DS">AI & DS</option>
+<option value="EE">Electrical</option>
+<option value="IT">Information Technology</option>
+<option value="BT">Biotechnology</option>
+<option value="AE">Aerospace</option>
+<option value="CHE">Chemical</option>
+</select>
+<label>Subject:</label>
+<input type="text" id="subject" placeholder="Type subject here" required>
+<label>Semester:</label>
+<select id="semester" required>
+<option value="">Select Semester</option>
+<option value="1">Semester 1</option>
+<option value="2">Semester 2</option>
+<option value="3">Semester 3</option>
+<option value="4">Semester 4</option>
+<option value="5">Semester 5</option>
+<option value="6">Semester 6</option>
+<option value="7">Semester 7</option>
+<option value="8">Semester 8</option>
+</select>
+<label>Upload File:</label>
+<div id="dropArea">
+Drag & Drop file here or click to upload
+<input type="file" id="file" required style="display:none;">
+</div>
+<div id="selectedFile">No file selected</div>
+<button type="submit">Add Note</button>
+</form>
+</section>
+
+<section id="notesSection">
+<h2>📑 Available Notes</h2>
+<label>Filter by Department:</label>
+<select id="filterDepartment">
+<option value="">All Departments</option>
+<option value="CSE">CSE</option>
+<option value="ECE">ECE</option>
+<option value="ME">Mechanical</option>
+<option value="CE">Civil</option>
+<option value="AI_DS">AI & DS</option>
+<option value="EE">Electrical</option>
+<option value="IT">Information Technology</option>
+<option value="BT">Biotechnology</option>
+<option value="AE">Aerospace</option>
+<option value="CHE">Chemical</option>
+</select>
+<input type="text" id="searchBar" placeholder="🔍 Search by subject, file, or semester...">
+<ul id="notesList"></ul>
+<div id="previewSection" style="display:none; margin-top:20px;">
+<h2>📖 Preview</h2>
+<iframe id="previewFrame"></iframe>
+</div>
+</section>
+
+<section id="aboutSection">
+<h2>ℹ️ About This Project</h2>
+<p>
+College Notes Hub is a simple yet powerful platform for students to upload, preview,
+and download class notes. Built as a college project, it helps promote
+collaboration and easy access to study materials.
+</p>
+</section>
+
+<section id="creditsSection">
+<h2>💻 Credits</h2>
+<p>
+<strong>Name:</strong> Ajay C<br>
+<strong>Department:</strong> AI & DS<br>
+<strong>E-mail for enquiries:</strong> <a href="mailto:ajaymukesh1737@gmail.com">ajaymukesh1737@gmail.com</a>
+</p>
+</section>
+
+<section id="reviewsSection">
+<h2>⭐ Reviews</h2>
+<form id="reviewForm">
+<label>Write a Review:</label>
+<textarea id="reviewText" rows="3" placeholder="Your feedback..." required></textarea>
+<button type="submit">Submit Review</button>
+</form>
+<ul id="reviewsList"></ul>
+</section>
+
+<script>
+const form = document.getElementById("noteForm");
+const notesList = document.getElementById("notesList");
+const searchBar = document.getElementById("searchBar");
+const previewSection = document.getElementById("previewSection");
+const previewFrame = document.getElementById("previewFrame");
+const dropArea = document.getElementById("dropArea");
+const fileInput = document.getElementById("file");
+const departmentSelect = document.getElementById("department");
+const subjectInput = document.getElementById("subject");
+const filterDepartment = document.getElementById("filterDepartment");
+const selectedFileDiv = document.getElementById("selectedFile");
+
+let notes = JSON.parse(localStorage.getItem("notes")) || [];
+renderNotes();
+
+dropArea.addEventListener("click", ()=>fileInput.click());
+dropArea.addEventListener("dragover", e=>{ e.preventDefault(); dropArea.style.backgroundColor="#f0f8ff"; });
+dropArea.addEventListener("dragleave", e=>{ e.preventDefault(); dropArea.style.backgroundColor="transparent"; });
+dropArea.addEventListener("drop", e=>{
+  e.preventDefault();
+  fileInput.files = e.dataTransfer.files;
+  dropArea.style.backgroundColor="transparent";
+  if(fileInput.files.length>0){ selectedFileDiv.innerText=`File Selected: ${fileInput.files[0].name}`; }
+});
+fileInput.addEventListener("change", ()=>{ if(fileInput.files.length>0){ selectedFileDiv.innerText=`File Selected: ${fileInput.files[0].name}`; } });
+
+form.addEventListener("submit", e=>{
+  e.preventDefault();
+  const file = fileInput.files[0];
+  if(!file){ alert("Please select a file!"); return; }
+  const reader = new FileReader();
+  reader.onload = function(event){
+    const note = {
+      department: departmentSelect.value,
+      subject: subjectInput.value,
+      semester: document.getElementById("semester").value,
+      fileName: file.name,
+      fileData: event.target.result
+    };
+    notes.push(note);
+    localStorage.setItem("notes", JSON.stringify(notes));
+    renderNotes();
+    selectedFileDiv.innerText = `Uploaded: ${file.name}`;
+    subjectInput.value=""; fileInput.value="";
+  };
+  reader.readAsDataURL(file);
+});
+
+function renderNotes(filterText=""){
+  const selectedDept = filterDepartment.value;
+  notesList.innerHTML="";
+  notes.forEach((note,index)=>{
+    const matchesFilterText = note.subject.toLowerCase().includes(filterText.toLowerCase()) || note.fileName.toLowerCase().includes(filterText.toLowerCase()) || note.semester.includes(filterText);
+    const matchesDepartment = selectedDept==="" || note.department===selectedDept;
+    if(matchesFilterText && matchesDepartment){
+      let li=document.createElement("li");
+      let link=document.createElement("span");
+      link.innerText=`[${note.department}] ${note.subject} (Sem ${note.semester}) - ${note.fileName}`;
+      let previewBtn=document.createElement("button");
+      previewBtn.innerText="Preview"; previewBtn.classList.add("previewBtn");
+      previewBtn.onclick=function(){ if(note.fileName.endsWith(".pdf")){ previewFrame.src=note.fileData; previewSection.style.display="block"; previewSection.scrollIntoView({behavior:"smooth"}); }else{ alert("⚠️ Only PDF files can be previewed!"); }};
+      let downloadBtn=document.createElement("button");
+      downloadBtn.innerText="Download"; downloadBtn.classList.add("downloadBtn");
+      downloadBtn.onclick=function(){ const a=document.createElement("a"); a.href=note.fileData; a.download=note.fileName; a.click(); };
+      let delBtn=document.createElement("button");
+      delBtn.innerText="Delete"; delBtn.classList.add("deleteBtn");
+      delBtn.onclick=function(){ notes.splice(index,1); localStorage.setItem("notes", JSON.stringify(notes)); renderNotes(searchBar.value); previewSection.style.display="none"; };
+      li.appendChild(link); li.appendChild(previewBtn); li.appendChild(downloadBtn); li.appendChild(delBtn);
+      notesList.appendChild(li);
+    }
+  });
+}
+
+searchBar.addEventListener("input", ()=>renderNotes(searchBar.value));
+filterDepartment.addEventListener("change", ()=>renderNotes(searchBar.value));
+
+function showSection(id){
+  document.querySelectorAll("section").forEach(sec=>sec.style.display="none");
+  const section=document.getElementById(id);
+  if(section){ section.style.display="block"; section.scrollIntoView({behavior:"smooth"}); }
+}
+
+// Default visible section
+window.addEventListener("DOMContentLoaded", ()=>{ showSection('uploadSection'); });
+
+// Reviews
+const reviewForm=document.getElementById("reviewForm");
+const reviewText=document.getElementById("reviewText");
+const reviewsList=document.getElementById("reviewsList");
+let reviews=JSON.parse(localStorage.getItem("reviews")) || [];
+function renderReviews(){ reviewsList.innerHTML=""; reviews.forEach(r=>{ let li=document.createElement("li"); li.classList.add("reviewItem"); li.innerText=r; reviewsList.appendChild(li); }); }
+renderReviews();
+reviewForm.addEventListener("submit", e=>{ e.preventDefault(); reviews.push(reviewText.value); localStorage.setItem("reviews", JSON.stringify(reviews)); reviewText.value=""; renderReviews(); });
+</script>
+
+</body>
+  </html>
