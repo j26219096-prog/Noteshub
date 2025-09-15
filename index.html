@@ -1,164 +1,309 @@
-<script>
-const form = document.getElementById("noteForm");
-const notesList = document.getElementById("notesList");
-const searchBar = document.getElementById("searchBar");
-const previewSection = document.getElementById("previewSection");
-const previewFrame = document.getElementById("previewFrame");
-const dropArea = document.getElementById("dropArea");
-const fileInput = document.getElementById("file");
-const departmentSelect = document.getElementById("department");
-const subjectInput = document.getElementById("subject");
-const filterDepartment = document.getElementById("filterDepartment");
-const selectedFileDiv = document.getElementById("selectedFile");
-
-let notes = JSON.parse(localStorage.getItem("notes")) || [];
-renderNotes();
-
-dropArea.addEventListener("click", ()=>fileInput.click());
-dropArea.addEventListener("dragover", e=>{ e.preventDefault(); dropArea.style.backgroundColor="#f0f8ff"; });
-dropArea.addEventListener("dragleave", e=>{ e.preventDefault(); dropArea.style.backgroundColor="transparent"; });
-dropArea.addEventListener("drop", e=>{
-  e.preventDefault();
-  fileInput.files = e.dataTransfer.files;
-  dropArea.style.backgroundColor="transparent";
-  if(fileInput.files.length>0){ selectedFileDiv.innerText=`File Selected: ${fileInput.files[0].name}`; }
-});
-fileInput.addEventListener("change", ()=>{ if(fileInput.files.length>0){ selectedFileDiv.innerText=`File Selected: ${fileInput.files[0].name}`; } });
-
-form.addEventListener("submit", e=>{
-  e.preventDefault();
-  const file = fileInput.files[0];
-  if(!file){ 
-    alert("⚠️ Please select a file!"); 
-    return; 
-  }
-
-  // ✅ File type check (allow only PDF, JPG, PNG)
-  const allowedTypes = ["application/pdf", "image/png", "image/jpeg"];
-  if(!allowedTypes.includes(file.type)){
-    alert("⚠️ Only PDF, PNG, and JPG files are allowed!");
-    return;
-  }
-
-  // ✅ File size check (max 5 MB)
-  if(file.size > 5 * 1024 * 1024){
-    alert("⚠️ File too large! Please upload files under 5 MB.");
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function(event){
-    const note = {
-      department: departmentSelect.value,
-      subject: subjectInput.value,
-      semester: document.getElementById("semester").value,
-      fileName: file.name,
-      fileData: event.target.result,
-      fileType: file.type
-    };
-    notes.push(note);
-    localStorage.setItem("notes", JSON.stringify(notes));
-    renderNotes();
-    selectedFileDiv.innerText = `Uploaded: ${file.name}`;
-    subjectInput.value=""; fileInput.value="";
-  };
-  reader.readAsDataURL(file);
-});
-
-function renderNotes(filterText=""){
-  const selectedDept = filterDepartment.value;
-  notesList.innerHTML="";
-  notes.forEach((note,index)=>{
-    const matchesFilterText = note.subject.toLowerCase().includes(filterText.toLowerCase()) || note.fileName.toLowerCase().includes(filterText.toLowerCase()) || note.semester.includes(filterText);
-    const matchesDepartment = selectedDept==="" || note.department===selectedDept;
-    if(matchesFilterText && matchesDepartment){
-      let li=document.createElement("li");
-      let link=document.createElement("span");
-      link.innerText=`[${note.department}] ${note.subject} (Sem ${note.semester}) - ${note.fileName}`;
-      
-      let previewBtn=document.createElement("button");
-      previewBtn.innerText="Preview"; 
-      previewBtn.classList.add("previewBtn");
-      previewBtn.onclick=function(){ 
-        if(note.fileType==="application/pdf"){
-          previewFrame.src=note.fileData; 
-          previewSection.style.display="block"; 
-          previewSection.scrollIntoView({behavior:"smooth"}); 
-        }else if(note.fileType.startsWith("image/")){
-          previewFrame.src=note.fileData;
-          previewSection.style.display="block"; 
-          previewSection.scrollIntoView({behavior:"smooth"});
-        }else{ 
-          alert("⚠️ Preview only works for PDF or images!"); 
-        }
-      };
-
-      let downloadBtn=document.createElement("button");
-      downloadBtn.innerText="Download"; 
-      downloadBtn.classList.add("downloadBtn");
-      downloadBtn.onclick=function(){ 
-        // Detect if running inside WebView (APK) or normal browser
-        if(window.navigator.userAgent.includes("wv")){ 
-          window.open(note.fileData, "_blank");
-        } else { 
-          const a=document.createElement("a"); 
-          a.href=note.fileData; 
-          a.download=note.fileName; 
-          a.click(); 
-        }
-      };
-
-      let delBtn=document.createElement("button");
-      delBtn.innerText="Delete"; 
-      delBtn.classList.add("deleteBtn");
-      delBtn.onclick=function(){ 
-        notes.splice(index,1); 
-        localStorage.setItem("notes", JSON.stringify(notes)); 
-        renderNotes(searchBar.value); 
-        previewSection.style.display="none"; 
-      };
-
-      li.appendChild(link); 
-      li.appendChild(previewBtn); 
-      li.appendChild(downloadBtn); 
-      li.appendChild(delBtn);
-      notesList.appendChild(li);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes Sharing App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0; padding: 0;
     }
-  });
-}
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background: #333;
+    }
+    nav button {
+      color: white;
+      background: transparent;
+      border: none;
+      padding: 1rem;
+      cursor: pointer;
+    }
+    nav button:hover { background: #575757; }
 
-searchBar.addEventListener("input", ()=>renderNotes(searchBar.value));
-filterDepartment.addEventListener("change", ()=>renderNotes(searchBar.value));
+    section { padding: 20px; display: none; }
+    h2 { margin-bottom: 10px; }
 
-function showSection(id){
-  document.querySelectorAll("section").forEach(sec=>sec.style.display="none");
-  const section=document.getElementById(id);
-  if(section){ section.style.display="block"; section.scrollIntoView({behavior:"smooth"}); }
-}
+    form { margin-bottom: 20px; }
+    input, select, textarea, button {
+      margin: 5px 0;
+      padding: 8px;
+      width: 100%;
+      max-width: 400px;
+    }
+    button { cursor: pointer; border: none; border-radius: 5px; }
 
-// Default visible section
-window.addEventListener("DOMContentLoaded", ()=>{ showSection('uploadSection'); });
+    ul { list-style: none; padding: 0; }
+    li { margin: 10px 0; background: #fff; padding: 10px; border-radius: 8px; }
 
-// Reviews
-const reviewForm=document.getElementById("reviewForm");
-const reviewText=document.getElementById("reviewText");
-const reviewsList=document.getElementById("reviewsList");
-let reviews=JSON.parse(localStorage.getItem("reviews")) || [];
-function renderReviews(){ 
-  reviewsList.innerHTML=""; 
-  reviews.forEach(r=>{ 
-    let li=document.createElement("li"); 
-    li.classList.add("reviewItem"); 
-    li.innerText=r; 
-    reviewsList.appendChild(li); 
-  }); 
-}
-renderReviews();
-reviewForm.addEventListener("submit", e=>{ 
-  e.preventDefault(); 
-  reviews.push(reviewText.value); 
-  localStorage.setItem("reviews", JSON.stringify(reviews)); 
-  reviewText.value=""; 
-  renderReviews(); 
-});
-    </script>      
+    .previewBtn, .downloadBtn, .deleteBtn {
+      margin-left: 10px; padding: 5px 10px;
+      border-radius: 5px; border: none;
+    }
+    .previewBtn { background: #2196F3; color: white; }
+    .downloadBtn { background: #FF9800; color: white; }
+    .deleteBtn { background: #F44336; color: white; }
+
+    #dropArea {
+      border: 2px dashed #4CAF50;
+      padding: 20px;
+      text-align: center;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+
+    #previewSection { display:none; margin-top: 20px; }
+    iframe {
+      width: 100%; height: 400px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .reviewItem {
+      background: #eee; margin: 5px 0; padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📚 Notes Sharing App</h1>
+  </header>
+
+  <nav>
+    <button onclick="showSection('uploadSection')">Upload Notes</button>
+    <button onclick="showSection('browseSection')">Browse Notes</button>
+    <button onclick="showSection('reviewsSection')">Reviews</button>
+  </nav>
+
+  <!-- Upload Section -->
+  <section id="uploadSection">
+    <h2>Upload Notes</h2>
+    <form id="noteForm">
+      <label>Department:</label>
+      <select id="department" required>
+        <option value="">Select Department</option>
+        <option value="CSE">CSE</option>
+        <option value="ECE">ECE</option>
+        <option value="EEE">EEE</option>
+        <option value="MECH">MECH</option>
+        <option value="CIVIL">CIVIL</option>
+      </select>
+
+      <label>Semester:</label>
+      <select id="semester" required>
+        <option value="">Select Semester</option>
+        <option value="1">1st Sem</option>
+        <option value="2">2nd Sem</option>
+        <option value="3">3rd Sem</option>
+        <option value="4">4th Sem</option>
+        <option value="5">5th Sem</option>
+        <option value="6">6th Sem</option>
+        <option value="7">7th Sem</option>
+        <option value="8">8th Sem</option>
+      </select>
+
+      <label>Subject:</label>
+      <input type="text" id="subject" placeholder="Enter subject" required>
+
+      <div id="dropArea">📂 Drag & Drop file here or Click to select</div>
+      <input type="file" id="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+      <div id="selectedFile"></div>
+
+      <button type="submit" style="background:#4CAF50;color:white;">Upload</button>
+    </form>
+  </section>
+
+  <!-- Browse Section -->
+  <section id="browseSection">
+    <h2>Browse Notes</h2>
+    <input type="text" id="searchBar" placeholder="Search by subject or file name">
+    <select id="filterDepartment">
+      <option value="">All Departments</option>
+      <option value="CSE">CSE</option>
+      <option value="ECE">ECE</option>
+      <option value="EEE">EEE</option>
+      <option value="MECH">MECH</option>
+      <option value="CIVIL">CIVIL</option>
+    </select>
+
+    <ul id="notesList"></ul>
+
+    <div id="previewSection">
+      <h3>Preview</h3>
+      <iframe id="previewFrame"></iframe>
+    </div>
+  </section>
+
+  <!-- Reviews Section -->
+  <section id="reviewsSection">
+    <h2>Student Reviews</h2>
+    <form id="reviewForm">
+      <textarea id="reviewText" placeholder="Write your feedback..." required></textarea>
+      <button type="submit" style="background:#4CAF50;color:white;">Submit Review</button>
+    </form>
+    <ul id="reviewsList"></ul>
+  </section>
+
+  <script>
+    const form = document.getElementById("noteForm");
+    const notesList = document.getElementById("notesList");
+    const searchBar = document.getElementById("searchBar");
+    const previewSection = document.getElementById("previewSection");
+    const previewFrame = document.getElementById("previewFrame");
+    const dropArea = document.getElementById("dropArea");
+    const fileInput = document.getElementById("file");
+    const departmentSelect = document.getElementById("department");
+    const subjectInput = document.getElementById("subject");
+    const filterDepartment = document.getElementById("filterDepartment");
+    const selectedFileDiv = document.getElementById("selectedFile");
+
+    let notes = JSON.parse(localStorage.getItem("notes")) || [];
+    renderNotes();
+
+    dropArea.addEventListener("click", ()=>fileInput.click());
+    dropArea.addEventListener("dragover", e=>{ e.preventDefault(); dropArea.style.backgroundColor="#f0f8ff"; });
+    dropArea.addEventListener("dragleave", e=>{ e.preventDefault(); dropArea.style.backgroundColor="transparent"; });
+    dropArea.addEventListener("drop", e=>{
+      e.preventDefault();
+      fileInput.files = e.dataTransfer.files;
+      dropArea.style.backgroundColor="transparent";
+      if(fileInput.files.length>0){ selectedFileDiv.innerText=`File Selected: ${fileInput.files[0].name}`; }
+    });
+    fileInput.addEventListener("change", ()=>{ if(fileInput.files.length>0){ selectedFileDiv.innerText=`File Selected: ${fileInput.files[0].name}`; } });
+
+    form.addEventListener("submit", e=>{
+      e.preventDefault();
+      const file = fileInput.files[0];
+      if(!file){ alert("⚠️ Please select a file!"); return; }
+
+      // ✅ File type check
+      const allowedTypes = ["application/pdf", "image/png", "image/jpeg"];
+      if(!allowedTypes.includes(file.type)){
+        alert("⚠️ Only PDF, PNG, and JPG files are allowed!");
+        return;
+      }
+
+      // ✅ File size check
+      if(file.size > 5 * 1024 * 1024){
+        alert("⚠️ File too large! Please upload files under 5 MB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event){
+        const note = {
+          department: departmentSelect.value,
+          subject: subjectInput.value,
+          semester: document.getElementById("semester").value,
+          fileName: file.name,
+          fileData: event.target.result,
+          fileType: file.type
+        };
+        notes.push(note);
+        localStorage.setItem("notes", JSON.stringify(notes));
+        renderNotes();
+        selectedFileDiv.innerText = `Uploaded: ${file.name}`;
+        subjectInput.value=""; fileInput.value="";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function renderNotes(filterText=""){
+      const selectedDept = filterDepartment.value;
+      notesList.innerHTML="";
+      notes.forEach((note,index)=>{
+        const matchesFilterText = note.subject.toLowerCase().includes(filterText.toLowerCase()) || note.fileName.toLowerCase().includes(filterText.toLowerCase()) || note.semester.includes(filterText);
+        const matchesDepartment = selectedDept==="" || note.department===selectedDept;
+        if(matchesFilterText && matchesDepartment){
+          let li=document.createElement("li");
+          let link=document.createElement("span");
+          link.innerText=`[${note.department}] ${note.subject} (Sem ${note.semester}) - ${note.fileName}`;
+          
+          let previewBtn=document.createElement("button");
+          previewBtn.innerText="Preview"; 
+          previewBtn.classList.add("previewBtn");
+          previewBtn.onclick=function(){ 
+            if(note.fileType==="application/pdf" || note.fileType.startsWith("image/")){
+              previewFrame.src=note.fileData; 
+              previewSection.style.display="block"; 
+              previewSection.scrollIntoView({behavior:"smooth"}); 
+            }else{ alert("⚠️ Preview only works for PDF or images!"); }
+          };
+
+          let downloadBtn=document.createElement("button");
+          downloadBtn.innerText="Download"; 
+          downloadBtn.classList.add("downloadBtn");
+          downloadBtn.onclick=function(){ 
+            if(window.navigator.userAgent.includes("wv")){ 
+              window.open(note.fileData, "_blank");
+            } else { 
+              const a=document.createElement("a"); 
+              a.href=note.fileData; 
+              a.download=note.fileName; 
+              a.click(); 
+            }
+          };
+
+          let delBtn=document.createElement("button");
+          delBtn.innerText="Delete"; 
+          delBtn.classList.add("deleteBtn");
+          delBtn.onclick=function(){ 
+            notes.splice(index,1); 
+            localStorage.setItem("notes", JSON.stringify(notes)); 
+            renderNotes(searchBar.value); 
+            previewSection.style.display="none"; 
+          };
+
+          li.appendChild(link); 
+          li.appendChild(previewBtn); 
+          li.appendChild(downloadBtn); 
+          li.appendChild(delBtn);
+          notesList.appendChild(li);
+        }
+      });
+    }
+
+    searchBar.addEventListener("input", ()=>renderNotes(searchBar.value));
+    filterDepartment.addEventListener("change", ()=>renderNotes(searchBar.value));
+
+    function showSection(id){
+      document.querySelectorAll("section").forEach(sec=>sec.style.display="none");
+      const section=document.getElementById(id);
+      if(section){ section.style.display="block"; section.scrollIntoView({behavior:"smooth"}); }
+    }
+    window.addEventListener("DOMContentLoaded", ()=>{ showSection('uploadSection'); });
+
+    // Reviews
+    const reviewForm=document.getElementById("reviewForm");
+    const reviewText=document.getElementById("reviewText");
+    const reviewsList=document.getElementById("reviewsList");
+    let reviews=JSON.parse(localStorage.getItem("reviews")) || [];
+    function renderReviews(){ 
+      reviewsList.innerHTML=""; 
+      reviews.forEach(r=>{ 
+        let li=document.createElement("li"); 
+        li.classList.add("reviewItem"); 
+        li.innerText=r; 
+        reviewsList.appendChild(li); 
+      }); 
+    }
+    renderReviews();
+    reviewForm.addEventListener("submit", e=>{ 
+      e.preventDefault(); 
+      reviews.push(reviewText.value); 
+      localStorage.setItem("reviews", JSON.stringify(reviews)); 
+      reviewText.value=""; 
+      renderReviews(); 
+    });
+  </script>
+</body>
+</html>
